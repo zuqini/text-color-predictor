@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" />
+<title>Background Color Text Predictor</title>
+<style>
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: grey;
+}
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin: 0 0 2em 0;
+}
+.sample {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+  width: 6em;
+  height: 3em;
+  border-radius: 1.5em;
+  font-size: 3em;
+  -webkit-box-shadow: 0px 0px 10px rgba(0,0,0,.9);
+  -moz-box-shadow: 0px 0px 10px rgba(0,0,0,.9);
+  box-shadow: 0px 0px 10px rgba(0,0,0,.9);
+}
+.sample:hover {
+  cursor: pointer;
+}
+.result {
+  width: 60em;
+  height: 20em;
+  margin: 2em 2em 2em 2em;
+  overflow-y: scroll;
+}
+.white {
+  color: white;
+}
+.black {
+  color: black;
+}
+</style>
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script type="text/javascript">
+const data = [];
+let curRGB;
+function genCol() { return Math.floor(Math.random() * 255); }
+function genRGB() {
+  $('.result').text(JSON.stringify(data));
+  $('.sample-count').text(data.length);
+  curRGB = [genCol(), genCol(), genCol()];
+  $('.background-indicator').text(curRGB);
+  $('.sample').css('background-color', `rgb(${curRGB[0]}, ${curRGB[1]}, ${curRGB[2]})`);
+}
+$(document).ready(() => {
+  genRGB();
+  $('.white').click(() => {
+    data.push({backgroundColor: curRGB, textColor: 0});
+    genRGB();
+  });
+  $('.black').click(() => {
+    data.push({backgroundColor: curRGB, textColor: 1});
+    genRGB();
+  });
+});
+</script>
+</head>
+<body>
+  <h1>Background Color Text Predictor</h1>
+  <h4>Sample Count: <span class="sample-count" /></h4>
+  <h4>Background Color: <span class="background-indicator" /></h4>
+  <div class="container">
+    <div class="sample white">Test</div>
+    <div class="sample black">Test</div>
+  </div>
+  <p>Result</p>
+  <textarea class="result"></textarea>
+</body>
+</html>
