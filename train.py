@@ -1,7 +1,9 @@
 import logging, sys, json
 import numpy as np
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+from result_generator import gen_result_html
+
+logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
@@ -70,11 +72,12 @@ class FeedForwardNet:
         a1 = sigmoid(self.z1)
         z2 = np.dot(self.a1, self.w2) + self.b2;
         a2 = sigmoid(self.z2)
-
-        result = [1 if (prediction == actual).all() else 0 for prediction, actual in zip(np.round(a2), Y)]
+        predictions = np.round(a2)
+        result = [1 if (prediction == actual).all() else 0 for prediction, actual in zip(predictions, Y)]
         logging.info('result:')
         logging.info(result)
         logging.info('accuracy: ' + str(np.sum(result)/len(Y)))
+        return list(zip(X, predictions.tolist()))
 
 def gen_input_data(data):
     return list(map(lambda data_point: list(map(lambda rgb: rgb / 255, data_point['backgroundColor'])), data))
@@ -83,9 +86,9 @@ def gen_output_data(data):
     return list(map(lambda x: x['textColor'], data))
 
 if __name__ == '__main__':
-    with open('data/training-set-v1.json') as f:
+    with open('data/training-set-v1.json', 'r') as f:
         training_set = json.load(f)
-    with open('data/test-set-v1.json') as f:
+    with open('data/test-set-v1.json', 'r') as f:
         test_set = json.load(f)
 
     epoch = 5000
@@ -100,4 +103,6 @@ if __name__ == '__main__':
         nn.feed_forward()
         nn.back_prop()
 
-    nn.evaluate(gen_input_data(test_set), gen_output_data(test_set))
+    result = nn.evaluate(gen_input_data(test_set), gen_output_data(test_set))
+    with open('result.html', 'w') as output:
+        output.write(gen_result_html(result))
