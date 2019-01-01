@@ -67,12 +67,12 @@ function genRGB() {
 $(document).ready(() => {
   genRGB();
   $('.white').click(() => {
-    data.push({backgroundColor: curRGB, textColor: 0});
+    data.push({backgroundColor: curRGB, textColor: [0, 1]});
     white++;
     genRGB();
   });
   $('.black').click(() => {
-    data.push({backgroundColor: curRGB, textColor: 1});
+    data.push({backgroundColor: curRGB, textColor: [1, 0]});
     black++;
     genRGB();
   });

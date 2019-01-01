@@ -1,4 +1,4 @@
-import logging, sys
+import logging, sys, json
 import numpy as np
 
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
@@ -53,6 +53,11 @@ class FeedForwardNet:
         logging.info(delta_b1)
 
 if __name__ == '__main__':
+    with open('data/training-set-v1.json') as f:
+        data = json.load(f)
+    backgroundColors = list(map(lambda x: x['backgroundColor'], data))
+    textColors = list(map(lambda x: x['textColor'], data))
+    print(textColors)
     X = np.array([[1, 1, 1]])
     Y = np.array([[1, 0]])
     logging.debug(X.shape)
