@@ -11,14 +11,17 @@ def sigmoid_derivative(sigmoid_x):
     return sigmoid_x * (1.0 - sigmoid_x)
 
 class FeedForwardNet:
-    def __init__(self, x, y):
+    def __init__(self, x, y, lr):
         self.x = x
         self.y = y
+        self.lr = lr
 
         self.w1 = np.random.rand(x.shape[1], 4)
         self.b1 = np.zeros((1, 4))
         self.w2 = np.random.rand(4, y.shape[1])
         self.b2 = np.zeros((1, y.shape[1]))
+
+        self.cost = 0
 
         logging.debug('initialization-------------------------------------')
         logging.debug(self.w1)
@@ -36,33 +39,45 @@ class FeedForwardNet:
         logging.debug(self.z1)
 
     def back_prop(self):
+        cost = np.sum(np.square(self.y - self.a2))
+        if abs(cost - self.cost) > 0.001:
+            logging.info('cost: ' + str(cost))
+        self.cost = cost
         delta_b2 = 2 * (self.y - self.a2) * sigmoid_derivative(self.a2)
         delta_w2 = np.dot(self.a1.T, delta_b2)
         delta_b1 = np.dot(self.w2, delta_b2.T).T * sigmoid_derivative(self.a1)
         delta_w1 = np.dot(self.x.T, delta_b1)
 
-        self.b2 += delta_b2
-        self.w2 += delta_w2
-        self.b1 += delta_b1
-        self.w1 += delta_w1
-        logging.info('back prop step-------------------------------------')
+        logging.debug(self.w2)
+        logging.debug(self.b2)
+        logging.debug(self.w1)
+        logging.debug(self.b1)
+
+        self.b2 += self.lr * np.sum(delta_b2, axis=0)
+        self.w2 += self.lr * delta_w2
+        self.b1 += self.lr * np.sum(delta_b1, axis=0)
+        self.w1 += self.lr * delta_w1
+        logging.debug('back prop step-------------------------------------')
         logging.debug(sigmoid_derivative(self.a1))
-        logging.info(delta_w2)
-        logging.info(delta_b2)
-        logging.info(delta_w1)
-        logging.info(delta_b1)
+        logging.debug(delta_w2)
+        logging.debug(delta_b2)
+        logging.debug(delta_w1)
+        logging.debug(delta_b1)
 
 if __name__ == '__main__':
     with open('data/training-set-v1.json') as f:
         data = json.load(f)
     backgroundColors = list(map(lambda x: x['backgroundColor'], data))
     textColors = list(map(lambda x: x['textColor'], data))
-    print(textColors)
-    X = np.array([[1, 1, 1]])
-    Y = np.array([[1, 0]])
+
+    epoch = 1500
+    learning_rate = 0.01
+    X = np.array(backgroundColors)
+    Y = np.array(textColors)
     logging.debug(X.shape)
     logging.debug(Y.shape)
 
-    nn = FeedForwardNet(X, Y)
-    nn.feed_forward()
-    nn.back_prop()
+    nn = FeedForwardNet(X, Y, learning_rate)
+    for i in range(epoch):
+        nn.feed_forward()
+        nn.back_prop()
