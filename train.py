@@ -4,7 +4,7 @@ import numpy as np
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 def sigmoid(x):
-    return 1.0/(1.0 + np.exp(-x))
+    return 1.0 / (1.0 + np.exp(-x))
 
 # see https://theclevermachine.wordpress.com/2014/09/08/derivation-derivatives-for-common-neural-network-activation-functions/
 def sigmoid_derivative(sigmoid_x):
@@ -32,6 +32,7 @@ class FeedForwardNet:
         self.a1 = sigmoid(self.z1)
         self.z2 = np.dot(self.a1, self.w2) + self.b2;
         self.a2 = sigmoid(self.z2)
+        logging.debug(self.a2)
         logging.debug('feed forward step-------------------------------------')
         logging.debug(self.x)
         logging.debug(self.w1)
@@ -39,7 +40,7 @@ class FeedForwardNet:
         logging.debug(self.z1)
 
     def back_prop(self):
-        cost = np.sum(np.square(self.y - self.a2))
+        cost = np.sum(np.square(self.a2 - self.y))
         if abs(cost - self.cost) > 0.001:
             logging.info('cost: ' + str(cost))
         self.cost = cost
@@ -67,11 +68,11 @@ class FeedForwardNet:
 if __name__ == '__main__':
     with open('data/training-set-v1.json') as f:
         data = json.load(f)
-    backgroundColors = list(map(lambda x: x['backgroundColor'], data))
+    backgroundColors = list(map(lambda data_point: list(map(lambda rgb: rgb / 255, data_point['backgroundColor'])), data))
     textColors = list(map(lambda x: x['textColor'], data))
 
-    epoch = 1500
-    learning_rate = 0.01
+    epoch = 5000
+    learning_rate = 0.15
     X = np.array(backgroundColors)
     Y = np.array(textColors)
     logging.debug(X.shape)
