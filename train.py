@@ -66,24 +66,36 @@ def gen_output_data(data):
     return list(map(lambda x: x['textColor'], data))
 
 if __name__ == '__main__':
-    with open('data/training-set-v1.json', 'r') as f:
+    with open('data/data_set_350.json', 'r') as f:
         training_set = json.load(f)
-    with open('data/test-set-v1.json', 'r') as f:
+    with open('data/data_set_100.json', 'r') as f:
+        validation_set = json.load(f)
+    with open('data/data_set_30.json', 'r') as f:
         test_set = json.load(f)
 
-    epoch = 5000
-    learning_rate = 0.2
+    epoch = 20000
+    learning_rate = 0.02
     X = np.array(gen_input_data(training_set))
     Y = np.array(gen_output_data(training_set))
 
+    validation_x = np.array(gen_input_data(validation_set))
+    validation_y = np.array(gen_output_data(validation_set))
+
     nn = FeedForwardNet(X, Y, learning_rate)
+    prev_cost = 0
     for i in range(epoch):
         nn.feed_forward()
         nn.back_prop()
+        cur_cost = nn.evaluate(validation_x, validation_y)[1]
+        if (abs(cur_cost - prev_cost) < 0.2):
+            logging.info('early stopping on validation set-----------------------------------')
+            logging.info(i)
+            break
+        logging.info(cur_cost)
+        logging.info(prev_cost)
+        prev_cost = cur_cost
 
-    logging.info('training set evaluation-----------------------------------')
-    result = nn.evaluate(gen_input_data(training_set), gen_output_data(training_set))
     logging.info('test set evaluation-----------------------------------')
-    result = nn.evaluate(gen_input_data(test_set), gen_output_data(test_set))
+    result = nn.evaluate(np.array(gen_input_data(test_set)), np.array(gen_output_data(test_set)))[0]
     with open('result.html', 'w') as output:
         output.write(gen_result_html(result))
