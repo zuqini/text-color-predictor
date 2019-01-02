@@ -1,9 +1,8 @@
 import logging, sys, json
 import numpy as np
-
 from result_generator import gen_result_html
 
-logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
@@ -25,47 +24,26 @@ class FeedForwardNet:
 
         self.cost = 0
 
-        logging.debug('initialization-------------------------------------')
-        logging.debug(self.w1)
-        logging.debug(self.w2)
-
     def feed_forward(self):
         self.z1 = np.dot(self.x, self.w1) + self.b1;
         self.a1 = sigmoid(self.z1)
         self.z2 = np.dot(self.a1, self.w2) + self.b2;
         self.a2 = sigmoid(self.z2)
-        logging.debug(self.a2)
-        logging.debug('feed forward step-------------------------------------')
-        logging.debug(self.x)
-        logging.debug(self.w1)
-        logging.debug(self.b1)
-        logging.debug(self.z1)
 
     def back_prop(self):
         cost = np.sum(np.square(self.a2 - self.y))
         if abs(cost - self.cost) > 0.01:
-            logging.info('cost: ' + str(cost))
+            logging.debug('cost: ' + str(cost))
         self.cost = cost
         delta_b2 = 2 * (self.y - self.a2) * sigmoid_derivative(self.a2)
         delta_w2 = np.dot(self.a1.T, delta_b2)
         delta_b1 = np.dot(self.w2, delta_b2.T).T * sigmoid_derivative(self.a1)
         delta_w1 = np.dot(self.x.T, delta_b1)
 
-        logging.debug(self.w2)
-        logging.debug(self.b2)
-        logging.debug(self.w1)
-        logging.debug(self.b1)
-
         self.b2 += self.lr * np.sum(delta_b2, axis=0)
         self.w2 += self.lr * delta_w2
         self.b1 += self.lr * np.sum(delta_b1, axis=0)
         self.w1 += self.lr * delta_w1
-        logging.debug('back prop step-------------------------------------')
-        logging.debug(sigmoid_derivative(self.a1))
-        logging.debug(delta_w2)
-        logging.debug(delta_b2)
-        logging.debug(delta_w1)
-        logging.debug(delta_b1)
 
     def evaluate(self, X, Y):
         z1 = np.dot(X, self.w1) + self.b1;
@@ -74,6 +52,8 @@ class FeedForwardNet:
         a2 = sigmoid(self.z2)
         predictions = np.round(a2)
         result = [1 if (prediction == actual).all() else 0 for prediction, actual in zip(predictions, Y)]
+        logging.info('predictions:')
+        logging.info(list(zip(X, a2)))
         logging.info('result:')
         logging.info(result)
         logging.info('accuracy: ' + str(np.sum(result)/len(Y)))
@@ -92,17 +72,18 @@ if __name__ == '__main__':
         test_set = json.load(f)
 
     epoch = 5000
-    learning_rate = 0.15
+    learning_rate = 0.2
     X = np.array(gen_input_data(training_set))
     Y = np.array(gen_output_data(training_set))
-    logging.debug(X.shape)
-    logging.debug(Y.shape)
 
     nn = FeedForwardNet(X, Y, learning_rate)
     for i in range(epoch):
         nn.feed_forward()
         nn.back_prop()
 
+    logging.info('training set evaluation-----------------------------------')
+    result = nn.evaluate(gen_input_data(training_set), gen_output_data(training_set))
+    logging.info('test set evaluation-----------------------------------')
     result = nn.evaluate(gen_input_data(test_set), gen_output_data(test_set))
     with open('result.html', 'w') as output:
         output.write(gen_result_html(result))
