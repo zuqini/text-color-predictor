@@ -2,7 +2,7 @@ import logging, sys, json
 import numpy as np
 from result_generator import gen_result_html
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
@@ -17,9 +17,9 @@ class FeedForwardNet:
         self.y = y
         self.lr = lr
 
-        self.w1 = np.random.rand(x.shape[1], 4)
-        self.b1 = np.zeros((1, 4))
-        self.w2 = np.random.rand(4, y.shape[1])
+        self.w1 = np.random.rand(x.shape[1], 8)
+        self.b1 = np.zeros((1, 8))
+        self.w2 = np.random.rand(8, y.shape[1])
         self.b2 = np.zeros((1, y.shape[1]))
 
         self.cost = 0
@@ -30,11 +30,12 @@ class FeedForwardNet:
         self.z2 = np.dot(self.a1, self.w2) + self.b2;
         self.a2 = sigmoid(self.z2)
 
-    def back_prop(self):
         cost = np.sum(np.square(self.a2 - self.y))
         if abs(cost - self.cost) > 0.01:
-            logging.debug('cost: ' + str(cost))
+            logging.debug('training cost: ' + str(cost))
         self.cost = cost
+
+    def back_prop(self):
         delta_b2 = 2 * (self.y - self.a2) * sigmoid_derivative(self.a2)
         delta_w2 = np.dot(self.a1.T, delta_b2)
         delta_b1 = np.dot(self.w2, delta_b2.T).T * sigmoid_derivative(self.a1)
@@ -47,17 +48,18 @@ class FeedForwardNet:
 
     def evaluate(self, X, Y):
         z1 = np.dot(X, self.w1) + self.b1;
-        a1 = sigmoid(self.z1)
-        z2 = np.dot(self.a1, self.w2) + self.b2;
-        a2 = sigmoid(self.z2)
+        a1 = sigmoid(z1)
+        z2 = np.dot(a1, self.w2) + self.b2;
+        a2 = sigmoid(z2)
+        cost = np.sum(np.square(a2 - Y))
         predictions = np.round(a2)
         result = [1 if (prediction == actual).all() else 0 for prediction, actual in zip(predictions, Y)]
-        logging.info('predictions:')
-        logging.info(list(zip(X, a2)))
-        logging.info('result:')
-        logging.info(result)
+        logging.debug('predictions:')
+        logging.debug(list(zip(X, a2)))
+        logging.debug('result:')
+        logging.debug(result)
         logging.info('accuracy: ' + str(np.sum(result)/len(Y)))
-        return list(zip(X, predictions.tolist()))
+        return [list(zip(X, predictions.tolist())), cost]
 
 def gen_input_data(data):
     return list(map(lambda data_point: list(map(lambda rgb: rgb / 255, data_point['backgroundColor'])), data))
